@@ -107,3 +107,23 @@ pre {
     padding: 2px 8px;
     z-index: 1;
 }
+
+@media (max-width: 768px) {
+  .app {
+    padding: 10px;
+  }
+
+  .input-form {
+    padding: 10px;
+    margin: 0 -10px;
+  }
+
+  .input-field {
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  .message.assistant {
+    padding-left: 8px;
+  }
+}
