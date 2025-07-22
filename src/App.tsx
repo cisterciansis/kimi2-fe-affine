@@ -29,6 +29,12 @@ function App() {
     }
   }, [chatHistory]);
 
+  useEffect(() => {
+    if (!isLoading) {
+      inputRef.current?.focus();
+    }
+  }, [isLoading]);
+
   const invokeChute = async (userQuestion: string) => {
     if (!userQuestion.trim()) {
       return;
@@ -137,7 +143,6 @@ function App() {
     } finally {
       setIsLoading(false);
       abortControllerRef.current = null;
-      inputRef.current?.focus();
     }
   };
 
@@ -157,6 +162,18 @@ function App() {
 
   return (
     <div className="app">
+      <form onSubmit={handleFormSubmit} className="input-form">
+        <span>:</span>
+        <input
+          ref={inputRef}
+          type="text"
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          className="input-field"
+          disabled={isLoading}
+          autoFocus
+        />
+      </form>
       <div className="chat-history" ref={chatHistoryRef}>
         {chatHistory.filter(msg => msg.role !== 'system').map((msg, index) => (
           <div key={index} className={`message ${msg.role}`}>
@@ -176,18 +193,6 @@ function App() {
             </div>
         )}
       </div>
-      <form onSubmit={handleFormSubmit} className="input-form">
-        <span>:</span>
-        <input
-          ref={inputRef}
-          type="text"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          className="input-field"
-          disabled={isLoading}
-          autoFocus
-        />
-      </form>
     </div>
   );
 }
