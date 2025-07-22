@@ -29,6 +29,12 @@ function App() {
     }
   }, [chatHistory]);
 
+  useEffect(() => {
+    if (!isLoading) {
+      inputRef.current?.focus();
+    }
+  }, [isLoading]);
+
   const invokeChute = async (userQuestion: string) => {
     if (!userQuestion.trim()) {
       return;
@@ -137,7 +143,6 @@ function App() {
     } finally {
       setIsLoading(false);
       abortControllerRef.current = null;
-      inputRef.current?.focus();
     }
   };
 
