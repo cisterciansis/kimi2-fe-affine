@@ -5,7 +5,6 @@ import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { coy } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { CopyToClipboard } from "react-copy-to-clipboard";
 import remarkMath from "remark-math";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -101,8 +100,10 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
           let codeString = String(children).replace(/\n$/, "");
 
           const handleCopy = () => {
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
+            navigator.clipboard.writeText(codeString).then(() => {
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            });
           };
 
           if (inline) {
@@ -113,11 +114,9 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
           if (className === 'language-latex' || className === 'language-tex') {
             return (
               <div style={{ position: "relative", margin: "1em 0" }}>
-                <CopyToClipboard text={codeString} onCopy={handleCopy}>
-                  <button className="copy-button">
-                    {copied ? "Copied!" : <CopyIcon />}
-                  </button>
-                </CopyToClipboard>
+                <button className="copy-button" onClick={handleCopy}>
+                  {copied ? "Copied!" : <CopyIcon />}
+                </button>
                 {renderLatexDocument(codeString)}
               </div>
             );
@@ -125,11 +124,9 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
 
           return match ? (
             <div style={{ position: "relative" }}>
-              <CopyToClipboard text={codeString} onCopy={handleCopy}>
-                <button className="copy-button">
-                  {copied ? "Copied!" : <CopyIcon />}
-                </button>
-              </CopyToClipboard>
+              <button className="copy-button" onClick={handleCopy}>
+                {copied ? "Copied!" : <CopyIcon />}
+              </button>
               <SyntaxHighlighter
                 style={coy}
                 language={match[1]}
