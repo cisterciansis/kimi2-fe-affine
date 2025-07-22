@@ -114,8 +114,9 @@ pre {
   }
 
   .input-form {
+    width: 90%;
     padding: 10px;
-    margin: 0 -10px;
+    margin: 0 auto 20px auto;
   }
 
   .input-field {
