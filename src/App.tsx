@@ -38,7 +38,7 @@ function GlassFilter() {
             seed="3"
             result="turbulence"
           />
-          <feGaussianBlur in="turbulence" stdDeviation="1.5" result="blurredNoise" />
+          <feGaussianBlur in="turbulence" stdDeviation="1.7" result="blurredNoise" />
           <feDisplacementMap
             in="SourceGraphic"
             in2="blurredNoise"
@@ -47,7 +47,7 @@ function GlassFilter() {
             yChannelSelector="G"
             result="displaced"
           />
-          <feGaussianBlur in="displaced" stdDeviation="2" result="finalBlur" />
+          <feGaussianBlur in="displaced" stdDeviation="2.5" result="finalBlur" />
           <feComposite in="finalBlur" in2="finalBlur" operator="over" />
         </filter>
 
@@ -263,7 +263,7 @@ function App() {
           <div className="relative group">
             {/* Glass panel */}
             <div
-              className="absolute inset-0 bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-3xl overflow-hidden"
+              className="absolute inset-0 bg-white/[0.6] backdrop-blur-[36px] border border-white/10 rounded-3xl overflow-hidden"
               style={{
                 backdropFilter: 'url("#liquid-glass")',
                 boxShadow: `
