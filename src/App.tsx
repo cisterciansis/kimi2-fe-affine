@@ -94,9 +94,9 @@ function App() {
   // Model selection foundation (persisted)
   const DEFAULT_MODELS: ModelOption[] = [
     { id: "moonshotai/Kimi-K2-Instruct", label: "Kimi 2", provider: "Moonshot" },
-    { id: "affine/top-1", label: "Top 1", provider: "Affine", comingSoon: true },
-    { id: "affine/top-2", label: "Top 2", provider: "Affine", comingSoon: true },
-    { id: "affine/top-3", label: "Top 3", provider: "Affine", comingSoon: true },
+    { id: "smartguy0505/Affine-f-001", label: "Affine f-001", provider: "Affine" },
+    { id: "alphateach/affine-2999999ft", label: "affine-2999999ft", provider: "Affine" },
+    { id: "alphateach/Affine-0000001", label: "Affine-0000001", provider: "Affine" },
   ];
   const [modelOptions] = useState<ModelOption[]>(DEFAULT_MODELS);
   const [selectedModel, setSelectedModel] = useState<ModelOption>(() => {
