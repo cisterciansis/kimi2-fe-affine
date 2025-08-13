@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import MarkdownRenderer from "./components/MarkdownRenderer";
+import ModelSelector, { ModelOption } from "./components/ModelSelector";
 
 interface ChatMessage {
   role: "user" | "assistant" | "system";
@@ -90,6 +91,29 @@ function App() {
   const chatHistoryRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Model selection foundation (persisted)
+  const DEFAULT_MODELS: ModelOption[] = [
+    { id: "moonshotai/Kimi-K2-Instruct", label: "Kimi 2", provider: "Moonshot" },
+    { id: "affine/top-1", label: "Top 1", provider: "Affine", comingSoon: true },
+    { id: "affine/top-2", label: "Top 2", provider: "Affine", comingSoon: true },
+    { id: "affine/top-3", label: "Top 3", provider: "Affine", comingSoon: true },
+  ];
+  const [modelOptions] = useState<ModelOption[]>(DEFAULT_MODELS);
+  const [selectedModel, setSelectedModel] = useState<ModelOption>(() => {
+    try {
+      const id = localStorage.getItem("selectedModelId");
+      const found = DEFAULT_MODELS.find((m) => m.id === id);
+      return found || DEFAULT_MODELS[0];
+    } catch {
+      return DEFAULT_MODELS[0];
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem("selectedModelId", selectedModel.id);
+    } catch {}
+  }, [selectedModel]);
+
   useEffect(() => {
     // Scroll to the bottom of the chat history when it updates
     if (chatHistoryRef.current) {
@@ -129,7 +153,7 @@ function App() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "moonshotai/Kimi-K2-Instruct",
+          model: selectedModel.id,
           messages: messagesToSend,
           stream: true,
           max_tokens: 1024,
@@ -209,8 +233,41 @@ function App() {
     }
   };
 
+  const stopStreaming = () => {
+    if (abortControllerRef.current) {
+      try {
+        abortControllerRef.current.abort();
+      } catch {}
+      abortControllerRef.current = null;
+    }
+    setIsLoading(false);
+    setChatHistory((prev) => {
+      const last = prev[prev.length - 1];
+      if (last?.role === "assistant" && last.content === "") {
+        return prev.slice(0, -1);
+      }
+      return prev;
+    });
+  };
+
+  // While streaming, pressing Enter stops the stream
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (isLoading && e.key === "Enter") {
+        e.preventDefault();
+        stopStreaming();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isLoading]);
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) {
+      stopStreaming();
+      return;
+    }
     if (!isLoading) {
       invokeChute(question);
     }
@@ -314,40 +371,57 @@ function App() {
                 autoFocus
               />
 
-              <button
-                type="submit"
-                disabled={isLoading || !question.trim()}
-                className="relative overflow-hidden backdrop-blur-2xl border border-white/20 rounded-full p-3 transition-all duration-300 group shadow-lg disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.1) 100%)",
-                  boxShadow: `
-                    0 2px 8px rgba(0,0,0,0.05),
-                    inset 1px 1px 1px rgba(255,255,255,0.3),
-                    inset -1px -1px 1px rgba(255,255,255,0.2),
-                    inset 0 0 4px rgba(255,255,255,0.1)
-                  `,
-                }}
-                aria-label="Send"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-white/10 rounded-full -z-10"></div>
-                <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/20 to-transparent rounded-full -z-10"></div>
-
-                <svg
-                  className="relative w-5 h-5 text-black/80 group-hover:translate-x-0.5 group-hover:text-black/90 transition-all z-10"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
+              <ModelSelector selected={selectedModel} onSelect={setSelectedModel} disabled={isLoading} options={modelOptions} />
+              {isLoading ? (
+                <button
+                  type="button"
+                  onClick={stopStreaming}
+                  aria-label="Stop"
+                  className="relative overflow-hidden backdrop-blur-2xl border border-white/20 rounded-full p-3 transition-transform duration-300 group hover:scale-105 shadow-lg hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.1) 100%)",
+                    boxShadow:
+                      "0 2px 8px rgba(0,0,0,0.05), inset 1px 1px 1px rgba(255,255,255,0.3), inset -1px -1px 1px rgba(255,255,255,0.2), inset 0 0 4px rgba(255,255,255,0.1)",
+                  }}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                  />
-                </svg>
-              </button>
+                  <div className="absolute inset-0 rounded-full bg-black/10 -z-10"></div>
+                  <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/20 to-transparent rounded-full -z-10"></div>
+                  <svg className="relative w-5 h-5 text-black/80 transition-colors duration-300 z-10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <rect x="7" y="7" width="10" height="10" rx="2" />
+                  </svg>
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={!question.trim()}
+                  aria-label="Send"
+                  className="relative overflow-hidden backdrop-blur-2xl border border-white/20 rounded-full p-3 transition-transform duration-300 group hover:scale-105 shadow-lg disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.1) 100%)",
+                    boxShadow:
+                      "0 2px 8px rgba(0,0,0,0.05), inset 1px 1px 1px rgba(255,255,255,0.3), inset -1px -1px 1px rgba(255,255,255,0.2), inset 0 0 4px rgba(255,255,255,0.1)",
+                  }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-white/10 rounded-full -z-10"></div>
+                  <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/20 to-transparent rounded-full -z-10"></div>
+                  <svg
+                    className="relative w-5 h-5 text-black/80 group-hover:text-black/90 transition-colors duration-300 z-10"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                    />
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
         </div>

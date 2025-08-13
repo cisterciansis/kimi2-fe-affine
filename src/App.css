@@ -56,6 +56,12 @@ pre {
   padding-left: 10px;
 }
 
+/* Larger gap between user inputs and agent responses */
+.message.user + .message.assistant,
+.message.assistant + .message.user {
+  margin-top: 20px;
+  padding-top: 8px;
+}
 .input-form {
   display: flex;
   align-items: center;
@@ -126,5 +132,12 @@ pre {
 
   .message.assistant {
     padding-left: 8px;
+  }
+
+  /* Larger gap between turns on small screens */
+  .message.user + .message.assistant,
+  .message.assistant + .message.user {
+    margin-top: 16px;
+    padding-top: 6px;
   }
 }
